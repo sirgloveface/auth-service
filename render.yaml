@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: nest-auth-service
+    env: node
+    buildCommand: npm install && npm run build
+    startCommand: npm run start:prod
+    envVars:
+      - key: PORT
+        value: 3000
+    plan: free
