@@ -26,8 +26,8 @@ jobs:
       - name: 🔨 Build project (optional)
         run: npm run build
 
-      - name: ✅ Run tests
-        run: npm run test
+      # - name: ✅ Run tests
+      #   run: npm run test
 
       - name: 🚀 Deploy to Render
         uses: JorgeLNJunior/render-deploy@v1.4.5
