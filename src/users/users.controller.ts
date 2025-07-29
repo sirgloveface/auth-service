@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-misused-promises */
 // src/products/products.controller.ts
 import {
   Controller,
@@ -26,41 +27,32 @@ export class UsersController {
   }
 
   @Get()
-  findAll() {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    return this.usersService.findAll();
+  async findAll(): Promise<User[]> {
+    return await this.usersService.findAll();
   }
 
-//   // Maneja peticiones GET a /products/:id
-//   @Get(':id')
-//   findOne(@Param('id') id: string) {
-//     // @Param('id') extrae el parámetro 'id' de la URL. Lo convertimos a número.
-//     const product = this.productsService.findOne(+id);
-//     if (!product) {
-//       // Puedes lanzar una excepción si el producto no se encuentra
-//       // throw new NotFoundException(`Product with ID ${id} not found`);
-//       return { message: `Product with ID ${id} not found` }; // Solo para este ejemplo
-//     }
-//     return product;
-//   }
+  // Maneja peticiones GET a /users/:id
+  @Get(':id')
+  async findOne(@Param('id') id: string): Promise<User> {
+    const user = await this.usersService.findOne(+id);
+    return user;
+  }
 
-//   // Maneja peticiones PATCH a /products/:id
-//   @Patch(':id')
-//   update(@Param('id') id: string, @Body() updateProductDto: UpdateProductDto) {
-//     // Llama al método 'update' del servicio
-//     const updatedProduct = this.productsService.update(+id, updateProductDto);
-//     if (!updatedProduct) {
-//       return { message: `Product with ID ${id} not found` };
-//     }
-//     return updatedProduct;
-//   }
+  // Maneja peticiones PATCH a /users/:id
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
+    const updatedUser = this.usersService.update(+id, updateUserDto);
+    if (!updatedUser) {
+      return { message: `User with ID ${id} not found` };
+    }
+    return updatedUser;
+  }
 
-//   // Maneja peticiones DELETE a /products/:id
-//   @Delete(':id')
-//   @HttpCode(HttpStatus.NO_CONTENT) // Establece el código de estado HTTP a 204 No Content
-//   remove(@Param('id') id: string) {
-//     // Llama al método 'remove' del servicio
-//     this.productsService.remove(+id);
-//     // Para 204, no se devuelve contenido en el body
-//   }
+  // Maneja peticiones DELETE a /users/:id
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async remove(@Param('id') id: string): Promise<void> {
+    // Llama al método 'remove' del servicio
+    await this.usersService.remove(+id);
+  }
 }

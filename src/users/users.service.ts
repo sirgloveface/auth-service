@@ -1,8 +1,10 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 // src/products/products.service.ts
 import {
   ConflictException,
   Injectable,
   InternalServerErrorException,
+  NotFoundException,
 } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -28,7 +30,6 @@ export class UsersService {
       const newUser = this.usersRepository.create(createUserDto);
       return await this.usersRepository.save(newUser);
     } catch (error) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       if (error?.code === '23505') {
         throw new ConflictException('Email address already exists.');
       }
@@ -46,62 +47,70 @@ export class UsersService {
     return await this.usersRepository.find();
   }
 
-  // /**
-  //  * Obtiene un usuario por su ID.
-  //  * @param id El ID del usuario.
-  //  * @returns El usuario encontrado o lanza NotFoundException.
-  //  */
-  // async findOne(id: number): Promise<User> {
-  //   // Busca un usuario por su ID.
-  //   // { where: { id } } es la forma moderna de TypeORM para especificar condiciones.
-  //   const user = await this.usersRepository.findOne({ where: { id } });
-  //   if (!user) {
-  //     throw new NotFoundException(`User with ID ${id} not found.`);
-  //   }
-  //   return user;
-  // }
+  /**
+   * Obtiene un usuario por su ID.
+   * @param id El ID del usuario.
+   * @returns El usuario encontrado o lanza NotFoundException.
+   */
+  async findOne(id: number): Promise<User> {
+    const user = await this.usersRepository.findOne({ where: { id } });
+    if (!user) {
+      throw new NotFoundException(`User with ID ${id} not found.`);
+    }
+    return user;
+  }
 
-  // /**
-  //  * Actualiza un usuario existente por su ID.
-  //  * @param id El ID del usuario a actualizar.
-  //  * @param updateUserDto Datos para actualizar el usuario.
-  //  * @returns El usuario actualizado.
-  //  */
-  // async update(id: number, updateUserDto: UpdateUserDto): Promise<User> {
-  //   // `preload` busca una entidad por ID y luego fusiona los datos proporcionados.
-  //   // Es útil para actualizaciones parciales y para asegurarse de que la entidad existe.
-  //   const user = await this.usersRepository.preload({
-  //     id: id,
-  //     ...updateUserDto,
-  //   });
+  /**
+   * Obtiene un usuario por su email.
+   * @param email El email del usuario.
+   * @returns El usuario encontrado o lanza NotFoundException.
+   */
+  async findByEmail(email: string): Promise<User | null> {
+    const user = await this.usersRepository.findOne({ where: { email } });
+    if (!user) {
+      throw new NotFoundException(`User with email ${email} not found.`);
+    }
+    return user;
+  }
 
-  //   if (!user) {
-  //     throw new NotFoundException(`User with ID ${id} not found.`);
-  //   }
+  /**
+   * Actualiza un usuario existente por su ID.
+   * @param id El ID del usuario a actualizar.
+   * @param updateUserDto Datos para actualizar el usuario.
+   * @returns El usuario actualizado.
+   */
+  async update(id: number, updateUserDto: UpdateUserDto): Promise<User> {
+    const user = await this.usersRepository.preload({
+      id: id,
+      ...updateUserDto,
+    });
 
-  //   try {
-  //     return await this.usersRepository.save(user); // Guarda los cambios
-  //   } catch (error) {
-  //     if (error.code === '23505') {
-  //       throw new ConflictException('Email address already exists.');
-  //     }
-  //     throw new InternalServerErrorException('Failed to update user. Please try again later.');
-  //   }
-  // }
+    if (!user) {
+      throw new NotFoundException(`User with ID ${id} not found.`);
+    }
 
-  // /**
-  //  * Elimina un usuario por su ID.
-  //  * @param id El ID del usuario a eliminar.
-  //  * @returns `true` si se eliminó, `false` si no se encontró.
-  //  */
-  // async remove(id: number): Promise<boolean> {
-  //   // `delete` elimina un registro directamente.
-  //   // También puedes usar `remove(user)` si primero recuperas la entidad completa.
-  //   const result = await this.usersRepository.delete(id);
-  //   // `result.affected` indica cuántos registros fueron afectados (eliminados).
-  //   if (result.affected === 0) {
-  //     throw new NotFoundException(`User with ID ${id} not found.`);
-  //   }
-  //   return true;
-  // }
+    try {
+      return await this.usersRepository.save(user); // Guarda los cambios
+    } catch (error) {
+      if (error?.code === '23505') {
+        throw new ConflictException('Email address already exists.');
+      }
+      throw new InternalServerErrorException(
+        'Failed to update user. Please try again later.',
+      );
+    }
+  }
+
+  /**
+   * Elimina un usuario por su ID.
+   * @param id El ID del usuario a eliminar.
+   * @returns `true` si se eliminó, `false` si no se encontró.
+   */
+  async remove(id: number): Promise<boolean> {
+    const result = await this.usersRepository.delete(id);
+    if (result.affected === 0) {
+      throw new NotFoundException(`User with ID ${id} not found.`);
+    }
+    return true;
+  }
 }
